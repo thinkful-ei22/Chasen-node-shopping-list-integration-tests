@@ -16,7 +16,7 @@ describe('Recipes', function() {
   after(function() {
     return closeServer();
   });
-
+//GET TEST
   it('should list recipes on GET', function() {
     return chai.request(app)
       .get('/recipes')
@@ -32,7 +32,7 @@ describe('Recipes', function() {
         });
       });
     })
-
+//POST TEST
     it('should add a recipe on POST', function() {
       const newRecipe= {
         name: "milkshake",
@@ -49,9 +49,45 @@ describe('Recipes', function() {
           expect(res.body).to.be.a('object');
           expect(res.body).to.include.keys('id', 'name', 'ingredients');
           expect(res.body.id).to.not.equal(null);
-          // response should be deep equal to `newItem` from above if we assign
-          // `id` to it from `res.body.id`
           expect(res.body).to.deep.equal(Object.assign(newRecipe, {id: res.body.id}));
         });
     });
+//PUT TEST
+  it('should update recipes on PUT', function() {
+    const updateData = {
+      name: 'foo',
+      ingredients: 'bar'
+    };
+    return chai.request(app)
+      // first have to get so we have an idea of object to update
+      .get('/recipes')
+      .then(function(res) {
+        updateData.id = res.body[0].id;
+        return chai.request(app)
+          .put(`/recipes/${updateData.id}`)
+          .send(updateData)
+      .then(function(res) {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.id).to.equal(updateData.id);
+          expect(res.body.name).to.equal(updateData.name);
+          expect(res.body.ingredients).to.equal(updateData.ingredients);
+        });
+      })
+  });
+//DELETE TEST
+it('should delete items on DELETE', function() {
+  return chai.request(app)
+    // first have to get so we have an `id` of item
+    // to delete
+    .get('/recipes')
+    .then(function(res) {
+      return chai.request(app)
+        .delete(`/recipes/${res.body[0].id}`);
+    })
+    .then(function(res) {
+      expect(res).to.have.status(204);
+    });
+  })
 });
